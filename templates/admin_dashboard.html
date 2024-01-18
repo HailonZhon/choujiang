@@ -1,0 +1,165 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>后台管理</title>
+    <style>
+        body {
+            font-family: 'Arial', sans-serif;
+            background-color: #f4f4f4;
+            margin: 0;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+    
+        h1 {
+            color: #333;
+        }
+    
+        .form-container {
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+            margin-bottom: 20px;
+            width: 300px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+    
+        #ticket-display {
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            width: 200px;
+            text-align: center;
+        }
+    
+        input[type="text"] {
+            padding: 10px;
+            margin-right: 10px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            width: 200px;
+        }
+    
+        button {
+        background-color: #0056b3;
+        color: white;
+        border: none;
+        padding: 10px 15px;
+        border-radius: 4px;
+        cursor: pointer;
+        transition: background-color 0.3s;
+        min-width: 120px; /* 增加最小宽度 */
+        white-space: nowrap; /* 防止文本换行 */
+    }
+    
+        button:hover {
+            background-color: #003d82;
+        }
+        form {
+        background: white;
+        padding: 20px;
+        border-radius: 8px;
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        margin-bottom: 40px; /* 调整这个值来改变间距 */
+        width: 300px;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+    }
+    </style>
+    
+</head>
+<body>
+    <h1>后台管理系统</h1>
+
+    <form id="generate-form" action="/generate_ticket/" method="post">
+        <input type="text" name="ticket_code" placeholder="这里将会显示最新生成的抽奖码" readonly>
+        <button type="submit">生成抽奖券</button>
+    </form>
+    <form id="ticket-query-form" action="/admin/tickets" method="get">
+        <input type="text" name="ticket_code" placeholder="输入抽奖券码">
+        <button type="submit">查询抽奖券</button>
+    </form>
+    <!-- 添加一个新的 div 用于显示查询结果 -->
+    <div id="query-result">查询结果将显示在这里</div>
+    <!-- 在这里添加显示抽奖券信息的逻辑 -->
+</body>
+</html>
+
+<script>
+    function getCookie(name) {
+        let value = `; ${document.cookie}`;
+        let parts = value.split(`; ${name}=`);
+        if (parts.length === 2) {
+            let cookieValue = parts.pop().split(";").shift();
+            console.log(`Cookie ${name}:`, cookieValue); // 打印获取的 Cookie 值
+            return cookieValue;
+        }
+        return null;
+    }
+    document.querySelector("form").addEventListener("submit", function(event) {
+        event.preventDefault();
+        const token = getCookie("access_token"); // 获取令牌
+        console.log("Token for request:", token); // 打印令牌以确保其存在
+        
+
+        fetch("/generate_ticket/", {
+            method: "POST",
+            headers: {
+                "Authorization": `Bearer ${token}`, // 确保令牌被正确发送
+                "Content-Type": "application/json" // 添加内容类型头部
+            }
+        }).then(response => {
+            if (response.ok) {
+                return response.json();
+            } else {
+                throw new Error(`Network response was not ok: ${response.status}`);
+            }
+        }).then(data => {
+            document.querySelector("#generate-form input[name='ticket_code']").value = data.ticket_code;
+            console.log("Ticket generated:", data); // 打印返回的数据
+        }).catch(error => {
+            console.error("There was a problem with the fetch operation:", error);
+        });
+    });
+    document.querySelector("#ticket-query-form").addEventListener("submit", function(event) {
+    event.preventDefault();
+    const ticketCode = document.querySelector("[name='ticket_code']").value;
+    const token = getCookie("access_token");
+    const resultDiv = document.getElementById("query-result");
+
+    // 清除之前的查询结果
+    resultDiv.textContent = "正在查询...";
+    fetch(`/admin/tickets/?ticket_code=${encodeURIComponent(ticketCode)}`, {
+        method: "GET",
+        headers: {
+            "Authorization": `Bearer ${token}`, // 确保令牌被正确设置
+        }
+    }).then(response => {
+        if (response.ok) {
+            return response.json();
+        } else {
+            throw new Error(`Network response was not ok: ${response.status}`);
+        }
+    }).then(data => {
+        console.log("Tickets data:", data); // 打印返回的数据
+        // 更新查询结果显示区域
+        const resultDiv = document.getElementById("query-result");
+        if (data && data.length > 0) {
+            // 假设返回的数据是抽奖券的数组
+            resultDiv.innerHTML = data.map(ticket => `抽奖码: ${ticket.ticket_code}，抽奖结果: ${ticket.result}`).join("<br>");
+        } else {
+            resultDiv.textContent = "没有找到抽奖券";
+        }
+        // 在这里处理返回的抽奖券数据
+    }).catch(error => {
+        console.error("There was a problem with the fetch operation:", error);
+    });
+});
+
+</script>

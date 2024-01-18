@@ -1,0 +1,93 @@
+<!-- templates/login.html -->
+<!DOCTYPE html>
+<html>
+<head>
+    <title>登录</title>
+    <style>
+        body {
+            font-family: 'Arial', sans-serif;
+            background-color: #f4f4f4;
+            margin: 0;
+            padding: 20px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+        }
+
+        form {
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+            display: flex;
+            flex-direction: column;
+            width: 300px;
+        }
+
+        h1 {
+            text-align: center;
+            color: #333;
+            margin-bottom: 20px;
+        }
+
+        input[type="text"], input[type="password"] {
+            padding: 10px;
+            margin-bottom: 10px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            width: calc(100% - 20px);
+        }
+
+        button {
+            background-color: #0056b3;
+            color: white;
+            border: none;
+            padding: 10px 15px;
+            border-radius: 4px;
+            cursor: pointer;
+            transition: background-color 0.3s;
+        }
+
+        button:hover {
+            background-color: #003d82;
+        }
+    </style>
+</head>
+<body>
+
+
+    <form action="/token" method="post" id="login-form">
+        <input type="text" name="username" placeholder="用户名">
+        <input type="password" name="password" placeholder="密码">
+        <button type="submit">登录</button>
+    </form>
+
+    <script>
+        document.getElementById("login-form").addEventListener("submit", async function(event) {
+            event.preventDefault();
+            const formData = new FormData(event.target);
+    
+            console.log("Sending login request..."); // 打印登录请求发送信息
+    
+            const response = await fetch("/token", {
+                method: "POST",
+                body: formData,
+            });
+    
+            if (response.status === 200) {
+                const data = await response.json();
+                console.log("Login successful, received token:", data.access_token); // 打印接收到的令牌
+    
+                document.cookie = `access_token=${data.access_token}; path=/`; // 确保设置了正确的路径
+                console.log("Token stored in cookie:", document.cookie); // 打印存储在 Cookie 中的令牌
+    
+                window.location.href = "/admin";
+            } else {
+                console.error("Login failed with status:", response.status); // 如果登录失败，打印错误信息
+            }
+        });
+    </script>
+    
+</body>
+</html>
