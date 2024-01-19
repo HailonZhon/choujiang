@@ -168,7 +168,7 @@ def get_random_result():
     
     # 确保概率总和为 1
     # 示例概率，可以根据实际情况调整
-    probabilities = [0.09, 0.30, 0.20, 0.15, 0.10, 0.05, 0.01, 0.10]  
+    probabilities = [0.10, 0.36, 0.25, 0.10, 0.5, 0.03, 0.01, 0.10]  
 
     return random.choices(prizes, probabilities)[0]
 
